@@ -1,0 +1,17 @@
+{
+	"name": "zoom_me",
+	"version": "1.0.0",
+	"main": "index.js",
+	"license": "MIT",
+	"description": "zoom clone",
+	"scripts": {
+		"start": "node server.js"
+	},
+	"dependencies": {
+		"ejs": "^3.1.5",
+		"express": "^4.17.1",
+		"global": "^4.4.0",
+		"nodemon": "^2.0.4",
+		"uuid": "^8.3.0"
+	}
+}

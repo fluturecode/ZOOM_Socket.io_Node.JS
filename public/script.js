@@ -1,5 +1,7 @@
 // JavaScript for front end lives here
 
+// Import socketio
+const socket = io("/");
 // Get video grid
 const videoGrid = document.getElementById("video-grid");
 console.log(videoGrid);
@@ -7,6 +9,13 @@ console.log(videoGrid);
 const myVideo = document.createElement("video");
 // Mute your own video
 myVideo.muted = true;
+
+// Create a peer connectoin
+var peer = new Peer(undefined, {
+	path: "/peerjs",
+	host: "/",
+	port: "3030",
+});
 
 let myVideoStream;
 // Allows your device to get video/audiof output from the browser
@@ -19,6 +28,20 @@ navigator.mediaDevices
 		myVideoStream = stream;
 		addVideoStream(myVideo, stream);
 	});
+
+// Listen on Peer connection
+peer.on("open", (id) => {
+	socket.emit("join-room", ROOM_ID);
+});
+
+// Listen on user connected
+socket.on("user-connected", (userId) => {
+	connectToNewUser(userId);
+});
+
+const connectToNewUser = (userId) => {
+	console.log(userId);
+};
 
 const addVideoStream = (video, stream) => {
 	video.srcObject = stream;

@@ -16,5 +16,9 @@
 - Yarn add Nodemon
 - Yarn add ejs
 - Yarn add uuid (Generate random IDs for each room)
+- Yarn add socket.io
+  (peerjs wraps the webrtc connection)
+- Yarn add Peer
+- Yarn
 
 # Tech Stack

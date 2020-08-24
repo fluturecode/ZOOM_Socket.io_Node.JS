@@ -22,25 +22,38 @@ let myVideoStream;
 navigator.mediaDevices
 	.getUserMedia({
 		video: true,
-		audio: true,
+		audio: false,
 	})
 	.then((stream) => {
+		// Video stream comes from the promise
 		myVideoStream = stream;
 		addVideoStream(myVideo, stream);
+
+		peer.on("call", (call) => {
+			call.answer(stream);
+			const video = document.createElement("video");
+			call.on("stream", (userVideoStream) => {
+				addVideoStream(video, userVideoStream);
+			});
+		});
+		// Listen on user connected
+		socket.on("user-connected", (userId) => {
+			connectToNewUser(userId, stream);
+		});
 	});
 
-// Listen on Peer connection
+// Listen on Peer connection, id is generated here
 peer.on("open", (id) => {
 	socket.emit("join-room", ROOM_ID, id);
 });
 
-// Listen on user connected
-socket.on("user-connected", (userId) => {
-	connectToNewUser(userId);
-});
-
-const connectToNewUser = (userId) => {
-	console.log(userId);
+const connectToNewUser = (userId, stream) => {
+	// Call connected user, send stream, create new video element, and connect their video stream
+	const call = peer.call(userId, stream);
+	const video = document.createElement("video");
+	call.on("stream", (userVideoStream) => {
+		addVideoStream(video, userVideoStream);
+	});
 };
 
 const addVideoStream = (video, stream) => {

@@ -31,7 +31,7 @@ navigator.mediaDevices
 
 // Listen on Peer connection
 peer.on("open", (id) => {
-	socket.emit("join-room", ROOM_ID);
+	socket.emit("join-room", ROOM_ID, id);
 });
 
 // Listen on user connected

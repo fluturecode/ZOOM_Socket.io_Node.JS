@@ -1,66 +1,61 @@
 // JavaScript for front end lives here
 
 // Import socketio
-const socket = io("/");
+const socket = io();
 // Get video grid
 const videoGrid = document.getElementById("video-grid");
-console.log(videoGrid);
+// Create a peer connectoin
+const peer = new Peer();
+
+let myVideoStream;
 // Create a video element
 const myVideo = document.createElement("video");
 // Mute your own video
 myVideo.muted = true;
-
-// Create a peer connectoin
-var peer = new Peer(undefined, {
-	path: "/peerjs",
-	host: "/",
-	port: "3030",
-});
-
-let myVideoStream;
-
 const peers = {};
-// Allows your device to get video/audiof output from the browser
+// Allows your device to get video/audio output from the browser
 navigator.mediaDevices
 	.getUserMedia({
 		video: true,
-		audio: false,
+		audio: true,
 	})
-	.then((stream) => {
-		// Video stream comes from the promise
-		myVideoStream = stream;
-		addVideoStream(myVideo, stream);
-
-		peer.on("call", (call) => {
-			call.answer(stream);
-			const video = document.createElement("video");
-			call.on("stream", (userVideoStream) => {
-				addVideoStream(video, userVideoStream);
+	.then(
+		(stream) => {
+			// Video stream comes from the promise
+			myVideoStream = stream;
+			addVideoStream(myVideo, stream);
+			peer.on("call", (call) => {
+				call.answer(stream);
+				const video = document.createElement("video");
+				call.on("stream", (userVideoStream) => {
+					addVideoStream(video, userVideoStream);
+				});
 			});
-		});
 
-		// Listen on user connected
-		socket.on("user-connected", (userId) => {
-			connectToNewUser(userId, stream);
-		});
-		// input value
-		let text = $("input");
-		// when press enter send message
-		$("html").keydown(function (e) {
-			if (e.which == 13 && text.val().length !== 0) {
-				socket.emit("message", text.val());
-				text.val("");
-			}
-		});
-		socket.on("createMessage", (message) => {
-			$("ul").append(`<li class="message"><b>user</b><br/>${message}</li>`);
-			scrollToBottom();
-		});
-	});
-
-socket.on("user-disconnected", (userId) => {
-	if (peers[userId]) peers[userId].close();
-});
+			// Listen on user connected
+			socket.on("user-connected", (userId) => {
+				alert("New user is connected!");
+				connectToNewUser(userId, stream);
+			});
+			// input value
+			let text = $("input");
+			// when press enter send message
+			$("html").keydown(function (e) {
+				let value = text.val();
+				if (e.which === 13 && text.val().length !== 0) {
+					socket.emit("message", value);
+					text.val("");
+				}
+			});
+			socket.on("createMessage", (message) => {
+				$("ul").append(`<li class="message"><b>user</b><br/>${message}</li>`);
+				scrollToBottom();
+			});
+		},
+		socket.on("user-disconnected", (userId) => {
+			if (peers[userId]) peers[userId].close();
+		})
+	);
 
 // Listen on Peer connection, id is generated here
 peer.on("open", (id) => {

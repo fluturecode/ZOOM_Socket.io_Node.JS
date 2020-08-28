@@ -2,18 +2,22 @@
 const express = require("express");
 // Initalize Express application
 const app = express();
+const cors = require("cors");
+app.use(cors());
 // Create server
 const server = require("http").Server(app);
 // Import socket.io
 const io = require("socket.io")(server);
-// Import uuid
-const { v4: uuidv4 } = require("uuid");
 // Import Peer
 const { ExpressPeerServer } = require("peer");
 // Create Peer Express server
 const peerServer = ExpressPeerServer(server, {
 	debug: true,
 });
+// Import uuid
+const User = require("./User.js");
+const { v4: uuidv4 } = require("uuid");
+let USER_LIST = {};
 // Set view engine
 app.set("view engine", "ejs");
 // Tells server public files are here
@@ -29,20 +33,48 @@ app.get("/", (req, res) => {
 app.get("/:room", (req, res) => {
 	res.render("room", { roomId: req.params.room });
 });
+
+// /**
+//  * @description Emits message to all users in a specific room
+//  * @param room {string} - Room name/id
+//  * @param emit {string} - Name of message to emit
+//  * @param message {any} - Message to be sent
+//  **/
+
+const sendToAllRoom = (room, emit, message) => {
+	for (let i in USER_LIST) {
+		if (USER_LIST[i].room == room) {
+			USER_LIST[i].socket.emit(emit, message);
+		}
+	}
+};
+
 // Create socket connection
 io.on("connection", (socket) => {
 	socket.on("join-room", (roomId, userId) => {
+		socket.id = userId;
+		socket.room = roomId;
 		socket.join(roomId);
-		socket.to(roomId).broadcast.emit("user-connected", userId);
-		// messages
-		socket.on("message", (message) => {
-			//send message to the same room
-			io.to(roomId).emit("createMessage", message);
+
+		sendToAllRoom(roomId, "user-connected", userId);
+		console.log(`joined ${roomId}`);
+
+		USER_LIST[socket.id] = new User({
+			name: `User_${USER_LIST.length}`,
+			socket: socket,
 		});
-		socket.on("disconnect", () => {
-			socket.to(roomId).broadcast.emit("user-disconnected", userId);
-		});
+	});
+	socket.on("message", (message) => {
+		//send message to the same room
+		console.log(message, USER_LIST[socket.id].room);
+		//send message to the same room
+		sendToAllRoom(USER_LIST[socket.id].room, "createMessage", message);
+	});
+
+	socket.on("disconnect", () => {
+		sendToAllRoom(USER_LIST[socket.id].room, "user-disconnected", socket.id);
+		delete USER_LIST[socket.id];
 	});
 });
 // Server is local host at port '3030'
-server.listen(3030);
+server.listen(process.env.PORT || 3030);

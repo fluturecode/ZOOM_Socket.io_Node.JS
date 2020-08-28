@@ -3,7 +3,7 @@ const express = require("express");
 // Initalize Express application
 const app = express();
 const cors = require("cors");
-app.use(cors());
+
 // Create server
 const server = require("http").Server(app);
 // Import socket.io
@@ -18,6 +18,8 @@ const peerServer = ExpressPeerServer(server, {
 const User = require("./User.js");
 const { v4: uuidv4 } = require("uuid");
 let USER_LIST = {};
+
+app.use(cors());
 // Set view engine
 app.set("view engine", "ejs");
 // Tells server public files are here

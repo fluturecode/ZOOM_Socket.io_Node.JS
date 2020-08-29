@@ -1,18 +1,21 @@
 // JavaScript for front end lives here
 
 // Import socketio
-const socket = io();
+const socket = io("/");
 // Get video grid
 const videoGrid = document.getElementById("video-grid");
 // Create a peer connectoin
-const peer = new Peer();
+const peer = new Peer(undefined, {
+	host: "/",
+	port: "3001",
+});
 
 let myVideoStream;
 // Create a video element
 const myVideo = document.createElement("video");
 // Mute your own video
 myVideo.muted = true;
-const peers = {};
+
 // Allows your device to get video/audio output from the browser
 navigator.mediaDevices
 	.getUserMedia({
@@ -34,7 +37,7 @@ navigator.mediaDevices
 
 			// Listen on user connected
 			socket.on("user-connected", (userId) => {
-				alert("New user is connected!");
+				alert("New user connected!");
 				connectToNewUser(userId, stream);
 			});
 			// input value
@@ -56,6 +59,8 @@ navigator.mediaDevices
 			if (peers[userId]) peers[userId].close();
 		})
 	);
+// Remove use when leaving room
+const peers = {};
 
 // Listen on Peer connection, id is generated here
 peer.on("open", (id) => {
